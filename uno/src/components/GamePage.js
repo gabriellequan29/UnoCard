@@ -1,25 +1,34 @@
 import React from "react";
 import { connect } from "react-redux";
 import uuid from "react-uuid";
+import Card from "./Card";
+import { Link } from "react-router-dom";
+import { DRAW_CARD } from "../actions/constants";
 
 const GamePage = (props) => {
   return (
     <div>
-      <h1>Game</h1>
+      <Link to="/">
+        <button>GO BACK</button>
+      </Link>
+      <h1>Turn: {props.turn}</h1>
       <div>
-        {props.player1Deck.map((card) => {
-          return <h6 key={uuid()}>{card}</h6>;
-        })}
+        {props.player1Deck.map((item) => (
+          <Card item={item} key={uuid()}/>
+        ))}
       </div>
       <hr></hr>
       <div>
-        <h1>Current Card: {props.playedCardsPile[0]}</h1>
+        <h1>
+          Current Card:{props.playedCardsPile[props.playedCardsPile.length - 1]}
+        </h1>
+        <button onClick={props.onCardDrawn}>DRAW CARD</button>
       </div>
       <hr></hr>
       <div>
-        {props.player2Deck.map((card) => {
-          return <h6 key={uuid()}>{card}</h6>;
-        })}
+      {props.player2Deck.map((item) => (
+          <Card item={item} key={uuid()}/>
+        ))}
       </div>
     </div>
   );
@@ -38,4 +47,11 @@ const mapStateToProps = (state) => {
   };
 };
 
-export default connect(mapStateToProps)(GamePage);
+const mapDispatchToProps = (dispatch) => {
+  return {
+    onCardDrawn: () =>
+      dispatch({ type: DRAW_CARD}),
+  };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(GamePage);
