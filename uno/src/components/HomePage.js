@@ -6,7 +6,7 @@ import { connect } from "react-redux";
 const HomePage = (props) => {
   return (
     <div>
-      <h1>HomePage</h1>
+      <h1>Welcome To UNO</h1>
       <Link to="/game">
         <button onClick={props.onStartGame}>START GAME</button>
       </Link>

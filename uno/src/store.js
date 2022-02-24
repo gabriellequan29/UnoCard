@@ -4,6 +4,7 @@ import { composeWithDevTools } from 'redux-devtools-extension';
 
 const initialState = {
     gameOver: true,
+    winner: '',
     turn: "",
     player1Deck: [],
     player2Deck: [],

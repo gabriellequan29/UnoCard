@@ -6,7 +6,19 @@ import { Link } from "react-router-dom";
 import { DRAW_CARD } from "../actions/constants";
 
 const GamePage = (props) => {
-  return (
+  return props.gameOver ? (
+    <div>
+      <h1>GAME OVER</h1>
+      <Link to="/">
+        <button>GO BACK</button>
+      </Link>
+      {props.winner !== "" && (
+        <>
+          <h2>{props.winner} wins!</h2>
+        </>
+      )}
+    </div>
+  ) : (
     <div>
       <Link to="/">
         <button>GO BACK</button>
@@ -14,20 +26,22 @@ const GamePage = (props) => {
       <h1>Turn: {props.turn}</h1>
       <div>
         {props.player1Deck.map((item) => (
-          <Card item={item} key={uuid()}/>
+          <Card item={item} key={uuid()} />
         ))}
       </div>
       <hr></hr>
       <div>
         <h1>
           Current Card:{props.playedCardsPile[props.playedCardsPile.length - 1]}
+          <br/>
+          Current Color:{props.currentColor}
         </h1>
         <button onClick={props.onCardDrawn}>DRAW CARD</button>
       </div>
       <hr></hr>
       <div>
-      {props.player2Deck.map((item) => (
-          <Card item={item} key={uuid()}/>
+        {props.player2Deck.map((item) => (
+          <Card item={item} key={uuid()} />
         ))}
       </div>
     </div>
@@ -37,6 +51,7 @@ const GamePage = (props) => {
 const mapStateToProps = (state) => {
   return {
     gameOver: state.gameOver,
+    winner: state.winner,
     turn: state.turn,
     player1Deck: state.player1Deck,
     player2Deck: state.player2Deck,
@@ -49,8 +64,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
   return {
-    onCardDrawn: () =>
-      dispatch({ type: DRAW_CARD}),
+    onCardDrawn: () => dispatch({ type: DRAW_CARD }),
   };
 };
 

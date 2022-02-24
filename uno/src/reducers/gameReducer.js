@@ -2,6 +2,14 @@ import shuffle from "../utils/shuffle";
 import { CARDS } from "../utils/cards";
 import { START_GAME, PLAY_CARD, DRAW_CARD } from "../actions/constants";
 
+const isGameOver = (arr) => {
+  return arr.length === 1
+}
+
+const setWinner = (arr, player) => {
+  return arr.length === 1 ? player : ''
+}
+
 const gameReducer = (state = {}, action) => {
   switch (action.type) {
     case START_GAME:
@@ -54,6 +62,7 @@ const gameReducer = (state = {}, action) => {
         drawCardPile: [...drawCardPile],
       };
 
+
     case PLAY_CARD:
       const cardPlayedBy = state.turn;
       switch (action.payload.cardPlayed) {
@@ -76,6 +85,8 @@ const gameReducer = (state = {}, action) => {
               }
               return {
                 ...state,
+                gameOver: isGameOver(state.player1Deck),
+                winner: setWinner(state.player1Deck, 'Player 1'),
                 turn: "Player 2",
                 playedCardsPile: [
                   ...state.playedCardsPile,
@@ -98,6 +109,8 @@ const gameReducer = (state = {}, action) => {
               }
               return {
                 ...state,
+                gameOver: isGameOver(state.player2Deck),
+                winner: setWinner(state.player2Deck, 'Player 2'),
                 turn: "Player 1",
                 playedCardsPile: [
                   ...state.playedCardsPile,
@@ -124,6 +137,8 @@ const gameReducer = (state = {}, action) => {
               }
               return {
                 ...state,
+                gameOver: isGameOver(state.player1Deck),
+                winner: setWinner(state.player1Deck, 'Player 1'),
                 turn: "Player 2",
                 playedCardsPile: [
                   ...state.playedCardsPile,
@@ -146,6 +161,8 @@ const gameReducer = (state = {}, action) => {
               }
               return {
                 ...state,
+                gameOver: isGameOver(state.player2Deck),
+                winner: setWinner(state.player2Deck, 'Player 2'),
                 turn: "Player 1",
                 playedCardsPile: [
                   ...state.playedCardsPile,
@@ -186,6 +203,8 @@ const gameReducer = (state = {}, action) => {
               }
               return {
                 ...state,
+                gameOver: isGameOver(state.player1Deck),
+                winner: setWinner(state.player1Deck, 'Player 1'),
                 playedCardsPile: [
                   ...state.playedCardsPile,
                   action.payload.cardPlayed,
@@ -207,6 +226,8 @@ const gameReducer = (state = {}, action) => {
               }
               return {
                 ...state,
+                gameOver: isGameOver(state.player2Deck),
+                winner: setWinner(state.player2Deck, 'Player 2'),
                 playedCardsPile: [
                   ...state.playedCardsPile,
                   action.payload.cardPlayed,
@@ -231,6 +252,8 @@ const gameReducer = (state = {}, action) => {
               }
               return {
                 ...state,
+                gameOver: isGameOver(state.player1Deck),
+                winner: setWinner(state.player1Deck, 'Player 1'),
                 playedCardsPile: [
                   ...state.playedCardsPile,
                   action.payload.cardPlayed,
@@ -252,6 +275,8 @@ const gameReducer = (state = {}, action) => {
               }
               return {
                 ...state,
+                gameOver: isGameOver(state.player2Deck),
+                winner: setWinner(state.player2Deck, 'Player 2'),
                 playedCardsPile: [
                   ...state.playedCardsPile,
                   action.payload.cardPlayed,
@@ -293,6 +318,8 @@ const gameReducer = (state = {}, action) => {
 
           return {
             ...state,
+            gameOver: isGameOver(state.player1Deck),
+            winner: setWinner(state.player1Deck, 'Player 1'),
             playedCardsPile: [
               ...state.playedCardsPile,
               action.payload.cardPlayed,
@@ -321,11 +348,12 @@ const gameReducer = (state = {}, action) => {
           }
 
           const copiedDrawCardPileArray = [...state.drawCardPile];
-          //pull out last two elements from it
           const drawCard1 = copiedDrawCardPileArray.pop();
           const drawCard2 = copiedDrawCardPileArray.pop();
           return {
             ...state,
+            gameOver: isGameOver(state.player2Deck),
+            winner: setWinner(state.player2Deck, 'Player 2'),
             playedCardsPile: [
               ...state.playedCardsPile,
               action.payload.cardPlayed,
@@ -364,6 +392,8 @@ const gameReducer = (state = {}, action) => {
 
           return {
             ...state,
+            gameOver: isGameOver(state.player1Deck),
+            winner: setWinner(state.player1Deck, 'Player 1'),
             playedCardsPile: [
               ...state.playedCardsPile,
               action.payload.cardPlayed,
@@ -396,6 +426,8 @@ const gameReducer = (state = {}, action) => {
           const drawCard2 = copiedDrawCardPileArray.pop();
           return {
             ...state,
+            gameOver: isGameOver(state.player2Deck),
+            winner: setWinner(state.player2Deck, 'Player 2'),
             playedCardsPile: [
               ...state.playedCardsPile,
               action.payload.cardPlayed,
@@ -422,10 +454,16 @@ const gameReducer = (state = {}, action) => {
         }
 
         case "W": {
-      console.log("W")
       if (cardPlayedBy === "Player 1") {
         const newColor = prompt("Enter new color: R / G / B / Y");
-        console.log("W_P1")
+        switch(newColor) {
+          case "R": case"G": case"B": case"Y":
+            break;
+          default:
+            console.log(newColor)
+            alert("Invalid Move!");
+            return state;
+        }
         const removeIndex = state.player1Deck.indexOf(
           action.payload.cardPlayed
         );
@@ -435,7 +473,9 @@ const gameReducer = (state = {}, action) => {
         }
         return {
           ...state,
-          turn: "Player 2",
+          gameOver: isGameOver(state.player1Deck),
+          winner: setWinner(state.player1Deck, 'Player 1'),
+          turn: "Player 2",          
           playedCardsPile: [
             ...state.playedCardsPile,
             action.payload.cardPlayed,
@@ -449,7 +489,14 @@ const gameReducer = (state = {}, action) => {
         };
       } else if (cardPlayedBy === "Player 2"){
         const newColor = prompt("Enter new color: R / G / B / Y");
-        console.log("W_P2")
+        switch(newColor) {
+          case "R": case"G": case"B": case"Y":
+            break;
+          default:
+            console.log(newColor)
+            alert("Invalid Move!");
+            return state;
+        }
         const removeIndex = state.player2Deck.indexOf(
           action.payload.cardPlayed
         );
@@ -459,6 +506,8 @@ const gameReducer = (state = {}, action) => {
         }
         return {
           ...state,
+          gameOver: isGameOver(state.player2Deck),
+          winner: setWinner(state.player2Deck, 'Player 2'),
           turn: "Player 1",
           playedCardsPile: [
             ...state.playedCardsPile,
@@ -480,6 +529,14 @@ const gameReducer = (state = {}, action) => {
         case "D4W": {
           if (cardPlayedBy === "Player 1") {
             const newColor = prompt("Enter new color: R / G / B / Y");
+            switch(newColor) {
+              case "R": case"G": case"B": case"Y":
+                break;
+              default:
+                console.log(newColor)
+                alert("Invalid Move!");
+                return state;
+            }
             const removeIndex = state.player1Deck.indexOf(
               action.payload.cardPlayed
             );
@@ -496,6 +553,8 @@ const gameReducer = (state = {}, action) => {
 
             return {
               ...state,
+              gameOver: isGameOver(state.player1Deck),
+              winner: setWinner(state.player1Deck, 'Player 1'),
               playedCardsPile: [
                 ...state.playedCardsPile,
                 action.payload.cardPlayed,
@@ -517,6 +576,14 @@ const gameReducer = (state = {}, action) => {
             };
           } else if (cardPlayedBy === "Player 2") {
             const newColor = prompt("Enter new color: R / G / B / Y");
+            switch(newColor) {
+              case "R": case"G": case"B": case"Y":
+                break;
+              default:
+                console.log(newColor)
+                alert("Invalid Move!");
+                return state;
+            }
             const removeIndex = state.player2Deck.indexOf(
               action.payload.cardPlayed
             );
@@ -533,6 +600,8 @@ const gameReducer = (state = {}, action) => {
 
             return {
               ...state,
+              gameOver: isGameOver(state.player2Deck),
+              winner: setWinner(state.player2Deck, 'Player 2'),
               playedCardsPile: [
                 ...state.playedCardsPile,
                 action.payload.cardPlayed,
@@ -557,6 +626,8 @@ const gameReducer = (state = {}, action) => {
             return state;
           }
         }
+        default:
+          return state;
       }
 
     
@@ -565,7 +636,7 @@ const gameReducer = (state = {}, action) => {
       if (cardDrawnBy === "Player 1") {
         const copiedDrawCardPileArray = [...state.drawCardPile];
         const drawCard = copiedDrawCardPileArray.pop();
-        console.log(drawCard);
+        alert(`You drew ${drawCard}.`)
         const colorOfDrawnCard = drawCard.charAt(drawCard.length - 1);
         let numberOfDrawnCard = drawCard.charAt(0);
         if (
@@ -576,7 +647,7 @@ const gameReducer = (state = {}, action) => {
         ) {
           numberOfDrawnCard = 404;
         }
-        if (
+        else if (
           drawCard === "D2R" ||
           drawCard === "D2G" ||
           drawCard === "D2B" ||
@@ -584,39 +655,54 @@ const gameReducer = (state = {}, action) => {
         ) {
           numberOfDrawnCard = 1024;
         }
-        if (drawCard === "W") {
+        else if (drawCard === "W") {
           numberOfDrawnCard = 300;
-        }
-        if (drawCard === "D4W") {
-          numberOfDrawnCard = 600;
-        }
-
-        if (
-          numberOfDrawnCard === state.currentNumber ||
-          colorOfDrawnCard === state.currentColor
-        ) {
-          console.log("playable")
+          window.confirm("The card is playable!");
           return {
             ...state,
-            turn: "Player 2",
-            playedCardsPile: [...state.playedCardsPile, drawCard],
-            currentColor: colorOfDrawnCard,
-            currentNumber: numberOfDrawnCard,
+            turn: "Player 1",
+            player1Deck: [...state.player1Deck, drawCard],
+            drawCardPile: [...copiedDrawCardPileArray],
+          };
+
+        }
+        else if (drawCard === "D4W") {
+          numberOfDrawnCard = 600;
+          window.confirm("The card is playable!");
+          return {
+            ...state,
+            turn: "Player 1",
+            player1Deck: [...state.player1Deck, drawCard],
             drawCardPile: [...copiedDrawCardPileArray],
           };
         }
 
-        return {
-          ...state,
-          turn: "Player 2",
-          player1Deck: [...state.player1Deck, drawCard],
-          drawCardPile: [...copiedDrawCardPileArray],
-        };
+        if (
+          numberOfDrawnCard === state.currentNumber ||
+          colorOfDrawnCard === state.currentColor
+        ) {
+          window.confirm("The card is playable!");
+          return {
+            ...state,
+            turn: "Player 1",
+            player1Deck: [...state.player1Deck, drawCard],
+            drawCardPile: [...copiedDrawCardPileArray],
+          };
+        }
+        else {
+          return {
+            ...state,
+            turn: "Player 2",
+            player1Deck: [...state.player1Deck, drawCard],
+            drawCardPile: [...copiedDrawCardPileArray],
+          };
+        }
+
+        
       } else {
         const copiedDrawCardPileArray = [...state.drawCardPile];
         const drawCard = copiedDrawCardPileArray.pop();
-        console.log(drawCard);
-
+        alert(`You drew ${drawCard}.`)
         const colorOfDrawnCard = drawCard.charAt(drawCard.length - 1);
         let numberOfDrawnCard = drawCard.charAt(0);
         if (
@@ -627,7 +713,7 @@ const gameReducer = (state = {}, action) => {
         ) {
           numberOfDrawnCard = 404;
         }
-        if (
+        else if (
           drawCard === "D2R" ||
           drawCard === "D2G" ||
           drawCard === "D2B" ||
@@ -635,35 +721,46 @@ const gameReducer = (state = {}, action) => {
         ) {
           numberOfDrawnCard = 1024;
         }
-        if (drawCard === "W") {
+        else if (drawCard === "W") {
           numberOfDrawnCard = 300;
+          window.confirm("The card is playable!");
+          return {
+            ...state,
+            turn: "Player 2",
+            player2Deck: [...state.player2Deck, drawCard],
+            drawCardPile: [...copiedDrawCardPileArray],
+          };
         }
-        if (drawCard === "D4W") {
+        else if (drawCard === "D4W") {
           numberOfDrawnCard = 600;
+          window.confirm("The card is playable!");
+          return {
+            ...state,
+            turn: "Player 2",
+            player2Deck: [...state.player2Deck, drawCard],
+            drawCardPile: [...copiedDrawCardPileArray],
+          };
         }
 
         if (
           numberOfDrawnCard === state.currentNumber ||
           colorOfDrawnCard === state.currentColor
         ) {
-          console.log("playable")
+          window.confirm("The card is playable!");
+          return {
+            ...state,
+            turn: "Player 2",
+            player2Deck: [...state.player2Deck, drawCard],
+            drawCardPile: [...copiedDrawCardPileArray],
+          };
+        } else {
           return {
             ...state,
             turn: "Player 1",
-            playedCardsPile: [...state.playedCardsPile, drawCard],
-            currentColor: colorOfDrawnCard,
-            currentNumber: numberOfDrawnCard,
+            player2Deck: [...state.player2Deck, drawCard],
+            drawCardPile: [...copiedDrawCardPileArray],
           };
-        }
-
-        //else add the drawn card to player2's deck
-        //return new state
-        return {
-          ...state,
-          turn: "Player 1",
-          player2Deck: [...state.player2Deck, drawCard],
-          drawCardPile: [...copiedDrawCardPileArray],
-        };
+        }  
       }
 
     default:
