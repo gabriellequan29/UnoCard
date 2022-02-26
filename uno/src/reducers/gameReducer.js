@@ -10,6 +10,8 @@ const setWinner = (arr, player) => {
   return arr.length === 1 ? player : ''
 }
 
+const COLOR = ['R', 'B', 'Y', 'R'];
+
 const gameReducer = (state = {}, action) => {
   switch (action.type) {
     case START_GAME:
@@ -456,13 +458,17 @@ const gameReducer = (state = {}, action) => {
         case "W": {
       if (cardPlayedBy === "Player 1") {
         const newColor = prompt("Enter new color: R / G / B / Y");
-        switch(newColor) {
-          case "R": case"G": case"B": case"Y":
-            break;
-          default:
-            console.log(newColor)
-            alert("Invalid Move!");
-            return state;
+        // switch(newColor) {
+        //   case "R": case"G": case"B": case"Y":
+        //     break;
+        //   default:
+        //     console.log(newColor)
+        //     alert("Invalid Move!");
+        //     return state;
+        // }
+        if (!newColor in COLOR) {
+          alert("Invalid Move! - NOT YOUR TURN");
+          return state;
         }
         const removeIndex = state.player1Deck.indexOf(
           action.payload.cardPlayed

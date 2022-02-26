@@ -1,9 +1,9 @@
-import React from "react";
+import React, { useEffect, useState } from 'react'
 import { connect } from "react-redux";
 import uuid from "react-uuid";
 import Card from "./Card";
 import { Link } from "react-router-dom";
-import { DRAW_CARD } from "../actions/constants";
+import { PLAY_CARD, DRAW_CARD } from "../actions/constants";
 
 const GamePage = (props) => {
   return props.gameOver ? (
@@ -26,7 +26,7 @@ const GamePage = (props) => {
       <h1>Turn: {props.turn}</h1>
       <div>
         {props.player1Deck.map((item) => (
-          <Card item={item} key={uuid()} />
+          <Card item={item} myClick={() => props.onCardPlayed(item)} key={uuid()} />
         ))}
       </div>
       <hr></hr>
@@ -41,7 +41,7 @@ const GamePage = (props) => {
       <hr></hr>
       <div>
         {props.player2Deck.map((item) => (
-          <Card item={item} key={uuid()} />
+          <Card item={item} myClick={() => props.onCardPlayed(item)} key={uuid()} />
         ))}
       </div>
     </div>
@@ -65,6 +65,8 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
   return {
     onCardDrawn: () => dispatch({ type: DRAW_CARD }),
+    onCardPlayed: (card) =>
+    dispatch({ type: PLAY_CARD, payload: { cardPlayed: card } }),
   };
 };
 
