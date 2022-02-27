@@ -4,6 +4,11 @@ import { Link } from "react-router-dom";
 import Card from "./Card";
 import shuffle from "../utils/shuffle";
 import uuid from "react-uuid";
+import io from 'socket.io-client';
+import { UPDATE_GAME, INIT_GAME } from '../utils/constants';
+
+let socket
+const ENDPOINT = 'http://localhost:5000'
 
 function Game() {
   //initialize game state
@@ -26,6 +31,17 @@ function Game() {
   const isWinner = (arr, player) => {
     return arr.length === 1 ? player : "";
   };
+
+  useEffect(() => {
+    const connectionOptions =  {
+        "forceNew" : true,
+        "reconnectionAttempts": "Infinity", 
+        "timeout" : 10000,                  
+        "transports" : ["websocket"]
+    }
+    socket = io.connect(ENDPOINT, connectionOptions)
+    console.log(socket);
+  }, [])
 
   useEffect(() => {
     const shuffledCards = shuffle(CARDS);
@@ -60,15 +76,42 @@ function Game() {
     //store all remaining cards into drawCardPile
     const drawCardPile = shuffledCards;
     //set initial state
-    setGameOver(false);
-    setTurn("Player 1");
-    setPlayer1Deck([...player1Deck]);
-    setPlayer2Deck([...player2Deck]);
-    setCurrentColor(playedCardsPile[0].charAt(1));
-    setCurrentNumber(playedCardsPile[0].charAt(0));
-    setPlayedCardsPile([...playedCardsPile]);
-    setDrawCardPile([...drawCardPile]);
+    socket.emit(INIT_GAME, {
+      gameOver: false,
+      turn: "Player 1",
+      player1Deck: [...player1Deck],
+      player2Deck: [...player2Deck],
+      playedCardsPile: [...playedCardsPile],
+      currentColor: playedCardsPile[0].charAt(1),
+      currentNumber: playedCardsPile[0].charAt(0),
+      drawCardPile: [...drawCardPile]
+    })
   }, []);
+
+  useEffect(() => {
+    socket.on(INIT_GAME, ({ gameOver, turn, player1Deck, player2Deck, currentColor, currentNumber, playedCardsPile, drawCardPile }) => {
+      setGameOver(gameOver);
+      setTurn(turn);
+      setPlayer1Deck(player1Deck);
+      setPlayer2Deck(player2Deck);
+      setCurrentColor(currentColor);
+      setCurrentNumber(currentNumber);
+      setPlayedCardsPile(playedCardsPile);
+      setDrawCardPile(drawCardPile);
+    });
+
+    socket.on(UPDATE_GAME, ({ gameOver, winner, turn, player1Deck, player2Deck, currentColor, currentNumber, playedCardsPile, drawCardPile }) => {
+      gameOver && setGameOver(gameOver)
+      winner && setWinner(winner)
+      turn && setTurn(turn)
+      player1Deck && setPlayer1Deck(player1Deck)
+      player2Deck && setPlayer2Deck(player2Deck)
+      currentColor && setCurrentColor(currentColor)
+      currentNumber && setCurrentNumber(currentNumber)
+      playedCardsPile && setPlayedCardsPile(playedCardsPile)
+      drawCardPile && setDrawCardPile(drawCardPile)
+    })
+  }, [])
 
   const onCardPlayedHandler = (cardPlayed) => {
     const cardPlayedBy = turn;
@@ -80,6 +123,7 @@ function Game() {
         {
         const numberOfPlayedCard = cardPlayed.charAt(0);
         const colorOfPlayedCard = cardPlayed.charAt(1);
+    
 
         if (currentColor === colorOfPlayedCard) {
           console.log("colors matched!");
@@ -89,32 +133,36 @@ function Game() {
               alert("Invalid Move! -  NOT YOUR TURN");
               break;
             }
-            setGameOver(isGameOver(player1Deck));
-            setWinner(isWinner(player1Deck, "Player 1"));
-            setTurn("Player 2");
-            setPlayedCardsPile([...playedCardsPile, cardPlayed]);
-            setPlayer1Deck([
-              ...player1Deck.slice(0, removeIndex),
-              ...player1Deck.slice(removeIndex + 1),
-            ]);
-            setCurrentColor(colorOfPlayedCard);
-            setCurrentNumber(numberOfPlayedCard);
+            socket.emit(UPDATE_GAME, {
+              gameOver: isGameOver(player1Deck),
+              winner: isWinner(player1Deck, "Player 1"),
+              turn: "Player 2",
+              playedCardsPile: [...playedCardsPile, cardPlayed],
+              player1Deck: [
+                ...player1Deck.slice(0, removeIndex),
+                ...player1Deck.slice(removeIndex + 1),
+              ],
+              currentColor: colorOfPlayedCard,
+              currentNumber: numberOfPlayedCard
+            })
           } else {
             const removeIndex = player2Deck.indexOf(cardPlayed);
             if (removeIndex === -1) {
               alert("Invalid Move! - NOT YOUR TURN");
               break;
             }
-            setGameOver(isGameOver(player2Deck));
-            setWinner(isWinner(player2Deck, "Player 2"));
-            setTurn("Player 1");
-            setPlayedCardsPile([...playedCardsPile, cardPlayed]);
-            setPlayer2Deck([
-              ...player2Deck.slice(0, removeIndex),
-              ...player2Deck.slice(removeIndex + 1),
-            ]);
-            setCurrentColor(colorOfPlayedCard);
-            setCurrentNumber(numberOfPlayedCard);
+            socket.emit(UPDATE_GAME, {
+              gameOver:isGameOver(player2Deck),
+              winner: isWinner(player2Deck, "Player 2"),
+              turn: "Player 1",
+              playedCardsPile: [...playedCardsPile, cardPlayed],
+              player2Deck: [
+                ...player2Deck.slice(0, removeIndex),
+                ...player2Deck.slice(removeIndex + 1),
+              ],
+              currentColor: colorOfPlayedCard,
+              currentNumber: numberOfPlayedCard
+            })
           }
         } else if (currentNumber === numberOfPlayedCard) {
           console.log("numbers matched!");
@@ -124,35 +172,36 @@ function Game() {
               alert("Invalid Move! - NOT YOUR TURN");
               break;
             }
-            setGameOver(isGameOver(player1Deck));
-            setWinner(isWinner(player1Deck, "Player 1"));
-            setTurn("Player 2");
-            setPlayedCardsPile([...playedCardsPile, cardPlayed]);
-            setPlayer1Deck([
-              ...player1Deck.slice(0, removeIndex),
-              ...player1Deck.slice(removeIndex + 1),
-            ]);
-            setCurrentColor(colorOfPlayedCard);
-            setCurrentNumber(numberOfPlayedCard);
-          } else if (cardPlayedBy === "Player 2") {
+            socket.emit(UPDATE_GAME, {
+              gameOver: isGameOver(player1Deck),
+              winner: isWinner(player1Deck, "Player 1"),
+              turn: "Player 2",
+              playedCardsPile: [...playedCardsPile, cardPlayed],
+              player1Deck: [
+                ...player1Deck.slice(0, removeIndex),
+                ...player1Deck.slice(removeIndex + 1),
+              ],
+              currentColor: colorOfPlayedCard,
+              currentNumber: numberOfPlayedCard
+            })
+          } else {
             const removeIndex = player2Deck.indexOf(cardPlayed);
             if (removeIndex === -1) {
               alert("Invalid Move! - NOT YOUR TURN");
               break;
             }
-            setGameOver(isGameOver(player2Deck));
-            setWinner(isWinner(player2Deck, "Player 2"));
-            setTurn("Player 1");
-            setPlayedCardsPile([...playedCardsPile, cardPlayed]);
-            setPlayer2Deck([
-              ...player2Deck.slice(0, removeIndex),
-              ...player2Deck.slice(removeIndex + 1),
-            ]);
-            setCurrentColor(colorOfPlayedCard);
-            setCurrentNumber(numberOfPlayedCard);
-          } else {
-            alert("Invalid Move! - normal card");
-            break;
+            socket.emit(UPDATE_GAME, {
+              gameOver:isGameOver(player2Deck),
+              winner: isWinner(player2Deck, "Player 2"),
+              turn: "Player 1",
+              playedCardsPile: [...playedCardsPile, cardPlayed],
+              player2Deck: [
+                ...player2Deck.slice(0, removeIndex),
+                ...player2Deck.slice(removeIndex + 1),
+              ],
+              currentColor: colorOfPlayedCard,
+              currentNumber: numberOfPlayedCard
+            })
           }
         } else {
           alert("Invalid Move! - normal card");
@@ -174,30 +223,34 @@ function Game() {
               alert("Invalid Move! - NOT YOUR TURN");
               break;
             }
-            setGameOver(isGameOver(player1Deck));
-            setWinner(isWinner(player1Deck, "Player 1"));
-            setPlayedCardsPile([...playedCardsPile, cardPlayed]);
-            setPlayer1Deck([
-              ...player1Deck.slice(0, removeIndex),
-              ...player1Deck.slice(removeIndex + 1),
-            ]);
-            setCurrentColor(colorOfPlayedCard);
-            setCurrentNumber(404);
+            socket.emit(UPDATE_GAME, {
+              gameOver: isGameOver(player1Deck),
+              winner: isWinner(player1Deck, "Player 1"),
+              playedCardsPile: [...playedCardsPile, cardPlayed],
+              player1Deck: [
+                ...player1Deck.slice(0, removeIndex),
+                ...player1Deck.slice(removeIndex + 1),
+              ],
+              currentColor: colorOfPlayedCard,
+              currentNumber: 404
+            })
           } else {
             const removeIndex = player2Deck.indexOf(cardPlayed);
             if (removeIndex === -1) {
               alert("Invalid Move! - NOT YOUR TURN");
               break;
             }
-            setGameOver(isGameOver(player2Deck));
-            setWinner(isWinner(player2Deck, "Player 2"));
-            setPlayedCardsPile([...playedCardsPile, cardPlayed]);
-            setPlayer2Deck([
-              ...player2Deck.slice(0, removeIndex),
-              ...player2Deck.slice(removeIndex + 1),
-            ]);
-            setCurrentColor(colorOfPlayedCard);
-            setCurrentNumber(404);
+            socket.emit(UPDATE_GAME, {
+              gameOver: isGameOver(player2Deck),
+              winner: isWinner(player2Deck, "Player 2"),
+              playedCardsPile: [...playedCardsPile, cardPlayed],
+              player2Deck: [
+                ...player2Deck.slice(0, removeIndex),
+                ...player2Deck.slice(removeIndex + 1),
+              ],
+              currentColor: colorOfPlayedCard,
+              currentNumber: 404
+            })
           }
         } else if (currentNumber === 404) {
           console.log("Numbers matched!");
@@ -207,30 +260,34 @@ function Game() {
               alert("Invalid Move! - NOT YOUR TURN");
               break;
             }
-            setGameOver(isGameOver(player1Deck));
-            setWinner(isWinner(player1Deck, "Player 1"));
-            setPlayedCardsPile([...playedCardsPile, cardPlayed]);
-            setPlayer1Deck([
-              ...player1Deck.slice(0, removeIndex),
-              ...player1Deck.slice(removeIndex + 1),
-            ]);
-            setCurrentColor(colorOfPlayedCard);
-            setCurrentNumber(404);
+            socket.emit(UPDATE_GAME, {
+              gameOver: isGameOver(player1Deck),
+              winner: isWinner(player1Deck, "Player 1"),
+              playedCardsPile: [...playedCardsPile, cardPlayed],
+              player1Deck: [
+                ...player1Deck.slice(0, removeIndex),
+                ...player1Deck.slice(removeIndex + 1),
+              ],
+              currentColor: colorOfPlayedCard,
+              currentNumber: 404
+            })
           } else {
             const removeIndex = player2Deck.indexOf(cardPlayed);
             if (removeIndex === -1) {
               alert("Invalid Move! - NOT YOUR TURN");
               break;
             }
-            setGameOver(isGameOver(player2Deck));
-            setWinner(isWinner(player2Deck, "Player 2"));
-            setPlayedCardsPile([...playedCardsPile, cardPlayed]);
-            setPlayer2Deck([
-              ...player2Deck.slice(0, removeIndex),
-              ...player2Deck.slice(removeIndex + 1),
-            ]);
-            setCurrentColor(colorOfPlayedCard);
-            setCurrentNumber(404);
+            socket.emit(UPDATE_GAME, {
+              gameOver: isGameOver(player2Deck),
+              winner: isWinner(player2Deck, "Player 2"),
+              playedCardsPile: [...playedCardsPile, cardPlayed],
+              player2Deck: [
+                ...player2Deck.slice(0, removeIndex),
+                ...player2Deck.slice(removeIndex + 1),
+              ],
+              currentColor: colorOfPlayedCard,
+              currentNumber: 404
+            })
           }
         } else {
           alert("Invalid Move! -- skip card");
@@ -257,22 +314,24 @@ function Game() {
             const drawCard1 = copiedDrawCardPileArray.pop();
             const drawCard2 = copiedDrawCardPileArray.pop();
 
-            setGameOver(isGameOver(player1Deck));
-            setWinner(isWinner(player1Deck, "Player 1"));
-            setPlayedCardsPile([...playedCardsPile, cardPlayed]);
-            setPlayer1Deck([
-              ...player1Deck.slice(0, removeIndex),
-              ...player1Deck.slice(removeIndex + 1),
-            ]);
-            setPlayer2Deck([
-              ...player2Deck.slice(0, player2Deck.length),
-              drawCard1,
-              drawCard2,
-              ...player2Deck.slice(player2Deck.length),
-            ]);
-            setCurrentColor(colorOfPlayedCard);
-            setCurrentNumber(1024);
-            setDrawCardPile([...copiedDrawCardPileArray]);
+            socket.emit(UPDATE_GAME, {
+              gameOver: isGameOver(player1Deck),
+              winner: isWinner(player1Deck, "Player 1"),
+              playedCardsPile: [...playedCardsPile, cardPlayed],
+              player1Deck: [
+                ...player1Deck.slice(0, removeIndex),
+                ...player1Deck.slice(removeIndex + 1),
+              ],
+              player2Deck: [
+                ...player2Deck.slice(0, player2Deck.length),
+                drawCard1,
+                drawCard2,
+                ...player2Deck.slice(player2Deck.length),
+              ],
+              currentColor: colorOfPlayedCard,
+              currentNumber: 1024,
+              drawCardPile: [...copiedDrawCardPileArray]
+            })
           } else {
             const removeIndex = player2Deck.indexOf(cardPlayed);
             if (removeIndex === -1) {
@@ -282,23 +341,27 @@ function Game() {
             const copiedDrawCardPileArray = [...drawCardPile];
             const drawCard1 = copiedDrawCardPileArray.pop();
             const drawCard2 = copiedDrawCardPileArray.pop();
-
-            setGameOver(isGameOver(player2Deck));
-            setWinner(isWinner(player2Deck, "Player 2"));
-            setPlayedCardsPile([...playedCardsPile, cardPlayed]);
-            setPlayer1Deck([
-              ...player1Deck.slice(0, player1Deck.length),
-              drawCard1,
-              drawCard2,
-              ...player1Deck.slice(player1Deck.length),
-            ]);
-            setPlayer2Deck([
-              ...player2Deck.slice(0, removeIndex),
-              ...player2Deck.slice(removeIndex + 1),
-            ]);
-            setCurrentColor(colorOfPlayedCard);
-            setCurrentNumber(1024);
-            setDrawCardPile([...copiedDrawCardPileArray]);
+            socket.emit(UPDATE_GAME, {
+              gameOver: isGameOver(player2Deck),
+              winner: isWinner(player2Deck, 'Player 2'),
+              playedCardsPile: [
+                playedCardsPile,
+                cardPlayed,
+              ],
+              player2Deck: [
+                ...player2Deck.slice(0, removeIndex),
+                ...player2Deck.slice(removeIndex + 1),
+              ],
+              player1Deck: [
+                ...player1Deck.slice(0, player1Deck.length),
+                drawCard1,
+                drawCard2,
+                ...player1Deck.slice(player1Deck.length),
+              ],
+              currentColor: colorOfPlayedCard,
+              currentNumber: 1024,
+              drawCardPile: [...copiedDrawCardPileArray],
+            })
           }
         }
         else if (currentNumber === 1024) {
@@ -314,22 +377,24 @@ function Game() {
             const drawCard1 = copiedDrawCardPileArray.pop();
             const drawCard2 = copiedDrawCardPileArray.pop();
 
-            setGameOver(isGameOver(player1Deck));
-            setWinner(isWinner(player1Deck, "Player 1"));
-            setPlayedCardsPile([...playedCardsPile, cardPlayed]);
-            setPlayer1Deck([
-              ...player1Deck.slice(0, removeIndex),
-              ...player1Deck.slice(removeIndex + 1),
-            ]);
-            setPlayer2Deck([
-              ...player2Deck.slice(0, player2Deck.length),
-              drawCard1,
-              drawCard2,
-              ...player2Deck.slice(player2Deck.length),
-            ]);
-            setCurrentColor(colorOfPlayedCard);
-            setCurrentNumber(1024);
-            setDrawCardPile([...copiedDrawCardPileArray]);
+            socket.emit(UPDATE_GAME, {
+              gameOver: isGameOver(player1Deck),
+              winner: isWinner(player1Deck, "Player 1"),
+              playedCardsPile: [...playedCardsPile, cardPlayed],
+              player1Deck: [
+                ...player1Deck.slice(0, removeIndex),
+                ...player1Deck.slice(removeIndex + 1),
+              ],
+              player2Deck: [
+                ...player2Deck.slice(0, player2Deck.length),
+                drawCard1,
+                drawCard2,
+                ...player2Deck.slice(player2Deck.length),
+              ],
+              currentColor: colorOfPlayedCard,
+              currentNumber: 1024,
+              drawCardPile: [...copiedDrawCardPileArray]
+            })
           } else {
             const removeIndex = player2Deck.indexOf(cardPlayed);
             if (removeIndex === -1) {
@@ -339,22 +404,27 @@ function Game() {
             const copiedDrawCardPileArray = [...drawCardPile];
             const drawCard1 = copiedDrawCardPileArray.pop();
             const drawCard2 = copiedDrawCardPileArray.pop();
-            setGameOver(isGameOver(player2Deck));
-            setWinner(isWinner(player2Deck, "Player 2"));
-            setPlayedCardsPile([...playedCardsPile, cardPlayed]);
-            setPlayer1Deck([
-              ...player1Deck.slice(0, player1Deck.length),
-              drawCard1,
-              drawCard2,
-              ...player1Deck.slice(player1Deck.length),
-            ]);
-            setPlayer2Deck([
-              ...player2Deck.slice(0, removeIndex),
-              ...player2Deck.slice(removeIndex + 1),
-            ]);
-            setCurrentColor(colorOfPlayedCard);
-            setCurrentNumber(1024);
-            setDrawCardPile([...copiedDrawCardPileArray]);
+            socket.emit(UPDATE_GAME, {
+              gameOver: isGameOver(player2Deck),
+              winner: isWinner(player2Deck, 'Player 2'),
+              playedCardsPile: [
+                playedCardsPile,
+                cardPlayed,
+              ],
+              player2Deck: [
+                ...player2Deck.slice(0, removeIndex),
+                ...player2Deck.slice(removeIndex + 1),
+              ],
+              player1Deck: [
+                ...player1Deck.slice(0, player1Deck.length),
+                drawCard1,
+                drawCard2,
+                ...player1Deck.slice(player1Deck.length),
+              ],
+              currentColor: colorOfPlayedCard,
+              currentNumber: 1024,
+              drawCardPile: [...copiedDrawCardPileArray],
+            })
           }
         } 
         else {
@@ -377,16 +447,18 @@ function Game() {
             alert("Invalid Move! - NOT YOUR TURN");
             break;
           }
-          setGameOver(isGameOver(player1Deck));
-          setWinner(isWinner(player1Deck, "Player 1"));
-          setTurn("Player 2");
-          setPlayedCardsPile([...playedCardsPile, cardPlayed]);
-          setPlayer1Deck([
-            ...player1Deck.slice(0, removeIndex),
-            ...player1Deck.slice(removeIndex + 1),
-          ]);
-          setCurrentColor(newColor);
-          setCurrentNumber(300);
+          socket.emit(UPDATE_GAME, {
+            gameOver: isGameOver(player1Deck),
+            winner: isWinner(player1Deck, "Player 1"),
+            turn: "Player 2",
+            playedCardsPile: [...playedCardsPile, cardPlayed],
+            player1Deck: [
+              ...player1Deck.slice(0, removeIndex),
+              ...player1Deck.slice(removeIndex + 1),
+            ],
+            currentColor: newColor,
+            currentNumber: 300
+          })
         } else if (cardPlayedBy === "Player 2") {
             const newColor = prompt("Enter new color: R / G / B / Y");
             if ( newColor === 'R' || newColor === 'G' || newColor === 'B' || newColor === 'Y') {
@@ -399,16 +471,18 @@ function Game() {
             alert("Invalid Move! - NOT YOUR TURN");
             break;
           }
-          setGameOver(isGameOver(player2Deck));
-          setWinner(isWinner(player2Deck, "Player 2"));
-          setTurn("Player 1");
-          setPlayedCardsPile([...playedCardsPile, cardPlayed]);
-          setPlayer2Deck([
-            ...player2Deck.slice(0, removeIndex),
-            ...player2Deck.slice(removeIndex + 1),
-          ]);
-          setCurrentColor(newColor);
-          setCurrentNumber(300);
+          socket.emit(UPDATE_GAME, {
+            gameOver: isGameOver(player2Deck),
+            winner: isWinner(player2Deck, "Player 2"),
+            turn: "Player 1",
+            playedCardsPile: [...playedCardsPile, cardPlayed],
+            player1Deck: [
+              ...player2Deck.slice(0, removeIndex),
+              ...player2Deck.slice(removeIndex + 1),
+            ],
+            currentColor: newColor,
+            currentNumber: 300
+          })
         } else {
           alert("Invalid Move! -- W");
           break;
@@ -436,23 +510,25 @@ function Game() {
           const drawCard3 = copiedDrawCardPileArray.pop();
           const drawCard4 = copiedDrawCardPileArray.pop();
 
-          setGameOver(isGameOver(player1Deck));
-          setWinner(isWinner(player1Deck, "Player 1"));
-          setPlayedCardsPile([...playedCardsPile, cardPlayed]);
-          setPlayer1Deck([
-            ...player1Deck.slice(0, removeIndex),
-            ...player1Deck.slice(removeIndex + 1),
-          ]);
-          setPlayer2Deck([
-            ...player2Deck.slice(0, player2Deck.length),
-            drawCard1,
-            drawCard2,
-            drawCard3,
-            drawCard4,
-          ]);
-          setCurrentColor(newColor);
-          setCurrentNumber(600);
-          setDrawCardPile([...copiedDrawCardPileArray]);
+          socket.emit(UPDATE_GAME, {
+            gameOver: isGameOver(player1Deck),
+            winner: isWinner(player1Deck, "Player 1"),
+            playedCardsPile: [...playedCardsPile, cardPlayed],
+            player1Deck: [
+              ...player1Deck.slice(0, removeIndex),
+              ...player1Deck.slice(removeIndex + 1),
+            ],
+            player2Deck: [
+              ...player2Deck.slice(0, player2Deck.length),
+              drawCard1,
+              drawCard2,
+              drawCard3,
+              drawCard4,
+            ],
+            currentColor: newColor,
+            currentNumber: 600,
+            drawCardPile: [...copiedDrawCardPileArray]
+          })
         } else if (cardPlayedBy === "Player 2") {
             const newColor = prompt("Enter new color: R / G / B / Y");
             if ( newColor === 'R' || newColor === 'G' || newColor === 'B' || newColor === 'Y') {
@@ -472,23 +548,26 @@ function Game() {
           const drawCard3 = copiedDrawCardPileArray.pop();
           const drawCard4 = copiedDrawCardPileArray.pop();
 
-          setGameOver(isGameOver(player2Deck));
-          setWinner(isWinner(player2Deck, "Player 2"));
-          setPlayedCardsPile([...playedCardsPile, cardPlayed]);
-          setPlayer1Deck([
-            ...player1Deck.slice(0, player1Deck.length),
-            drawCard1,
-            drawCard2,
-            drawCard3,
-            drawCard4,
-          ]);
-          setPlayer2Deck([
-            ...player2Deck.slice(0, removeIndex),
-            ...player2Deck.slice(removeIndex + 1),
-          ]);
-          setCurrentColor(newColor);
-          setCurrentNumber(600);
-          setDrawCardPile([...copiedDrawCardPileArray]);
+
+          socket.emit(UPDATE_GAME, {
+            gameOver: isGameOver(player2Deck),
+            winner: isWinner(player2Deck, "Player 2"),
+            playedCardsPile: [...playedCardsPile, cardPlayed],
+            player1Deck: [
+              ...player1Deck.slice(0, player1Deck.length),
+              drawCard1,
+              drawCard2,
+              drawCard3,
+              drawCard4,
+            ],
+            player2Deck: [
+              ...player2Deck.slice(0, removeIndex),
+              ...player2Deck.slice(removeIndex + 1),4,
+            ],
+            currentColor: newColor,
+            currentNumber: 600,
+            drawCardPile: [...copiedDrawCardPileArray]
+          })
         } else {
           alert("Invalid Move! -- D4W");
           break;
@@ -525,27 +604,41 @@ function Game() {
       } else if (drawCard === "W") {
         numberOfDrawnCard = 300;
         window.confirm("The card is playable!");
-        setTurn("Player 1");
-        setPlayer1Deck([...player1Deck, drawCard]);
-        setDrawCardPile([...copiedDrawCardPileArray]);
+
+        socket.emit(UPDATE_GAME, {
+          turn: "Player 1",
+          player1Deck: [...player1Deck, drawCard],
+          drawCardPile: [...copiedDrawCardPileArray]
+        })
       } else if (drawCard === "D4W") {
         numberOfDrawnCard = 600;
         window.confirm("The card is playable!");
-        setTurn("Player 1");
-        setPlayer1Deck([...player1Deck, drawCard]);
-        setDrawCardPile([...copiedDrawCardPileArray]);
+
+        socket.emit(UPDATE_GAME, {
+          turn: "Player 1",
+          player1Deck: [...player1Deck, drawCard],
+          drawCardPile: [...copiedDrawCardPileArray]
+        })
       }
       if (drawCard !== "W" && drawCard !== "D4W") {
         if (numberOfDrawnCard === currentNumber || colorOfDrawnCard === currentColor)
         {
           window.confirm("The card is playable!");
-          setTurn("Player 1");
-          setPlayer1Deck([...player1Deck, drawCard]);
-          setDrawCardPile([...copiedDrawCardPileArray]);
+
+          socket.emit(UPDATE_GAME, {
+            turn: "Player 1",
+            player1Deck: [...player1Deck, drawCard],
+            drawCardPile: [...copiedDrawCardPileArray]
+          })
+
         } else {
-          setTurn("Player 2");
-          setPlayer1Deck([...player1Deck, drawCard]);
-          setDrawCardPile([...copiedDrawCardPileArray]);
+
+          socket.emit(UPDATE_GAME, {
+            turn: "Player 2",
+            player1Deck: [...player1Deck, drawCard],
+            drawCardPile: [...copiedDrawCardPileArray]
+          })
+
         }
       }         
     } else {
@@ -571,15 +664,23 @@ function Game() {
       } else if (drawCard === "W") {
         numberOfDrawnCard = 300;
         window.confirm("The card is playable!");
-        setTurn("Player 2");
-        setPlayer2Deck([...player2Deck, drawCard]);
-        setDrawCardPile([...copiedDrawCardPileArray]);
+
+        socket.emit(UPDATE_GAME, {
+          turn: "Player 2",
+          player2Deck: [...player2Deck, drawCard],
+          drawCardPile: [...copiedDrawCardPileArray]
+        })
+
       } else if (drawCard === "D4W") {
         numberOfDrawnCard = 600;
         window.confirm("The card is playable!");
-        setTurn("Player 2");
-        setPlayer2Deck([...player2Deck, drawCard]);
-        setDrawCardPile([...copiedDrawCardPileArray]);
+
+        socket.emit(UPDATE_GAME, {
+          turn: "Player 2",
+          player2Deck: [...player2Deck, drawCard],
+          drawCardPile: [...copiedDrawCardPileArray]
+        })
+
       }
 
       if (drawCard !== "W" && drawCard !== "D4W") {
@@ -588,13 +689,20 @@ function Game() {
             colorOfDrawnCard === currentColor
           ) {
             window.confirm("The card is playable!");
-            setTurn("Player 2");
-            setPlayer2Deck([...player2Deck, drawCard]);
-            setDrawCardPile([...copiedDrawCardPileArray]);
+
+            socket.emit(UPDATE_GAME, {
+              turn: "Player 2",
+              player2Deck: [...player2Deck, drawCard],
+              drawCardPile: [...copiedDrawCardPileArray]
+            })
+
           } else {
-            setTurn("Player 1");
-            setPlayer2Deck([...player2Deck, drawCard]);
-            setDrawCardPile([...copiedDrawCardPileArray]);
+
+            socket.emit(UPDATE_GAME, {
+              turn: "Player 1",
+              player2Deck: [...player2Deck, drawCard],
+              drawCardPile: [...copiedDrawCardPileArray]
+            })
           }
       }
     }
@@ -614,9 +722,6 @@ function Game() {
     </div>
   ) : (
     <div>
-      <Link to="/">
-        <button>GO BACK</button>
-      </Link>
       <h1>Turn: {turn}</h1>
       <div>
         {player1Deck.map((item) => (
