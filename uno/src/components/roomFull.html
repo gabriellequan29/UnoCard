@@ -1,0 +1,58 @@
+
+
+  (!roomFull) ? <>  
+  {users.length===2 ? <> {
+    gameOver ? (
+        <div>
+          <h1>GAME OVER</h1>
+          <Link to="/">
+            <button>GO BACK</button>
+          </Link>
+          {winner !== "" && (
+            <>
+              <h2>{winner} wins!</h2>
+            </>
+          )}
+        </div>
+        ) : (
+        <div>
+          <h1>Turn: {turn}</h1>
+          <hr></hr>
+          <div>
+            <h1>
+              Current Card:{playedCardsPile[playedCardsPile.length - 1]}
+              <br />
+              Current Color:{currentColor}
+            </h1>
+            <button onClick={onCardDrawnHandler}>DRAW CARD</button>
+          </div>
+          <hr></hr>
+          <div>
+            {gamePlayers.map((item) => {
+              return (
+                <div key={uuid()}>
+                  <h3>{item.player}</h3>
+                  {item.playerDeck.map((element) => (
+                    <Card
+                      item={element}
+                      myClick={() => onCardPlayedHandler(element)}
+                      key={uuid()}
+                    />
+                  ))}
+                  <hr></hr>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        )
+
+
+  }
+    
+    
+    </> : <h1>Waiting for other player</h1> }
+
+
+  
+  </> : <h1>Room full</h1>
