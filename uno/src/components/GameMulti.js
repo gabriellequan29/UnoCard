@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { CARDS } from "../utils/cards";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import Card from "./Card";
 import shuffle from "../utils/shuffle";
 import uuid from "react-uuid";
@@ -46,8 +46,9 @@ function GameMulti() {
 
   useEffect(() => {
     const shuffledCards = shuffle(CARDS);
-    gamePlayers.map((item) => {
-      item.playerDeck = shuffledCards.splice(0, 7);
+    const initGamePlayers = gamePlayers.map((item) => {
+        item.playerDeck = shuffledCards.splice(0, 7);
+        return item;
     });
 
     let randomCardIndex;
@@ -80,8 +81,8 @@ function GameMulti() {
     //set initial state
     socket.emit(INIT_GAME, {
       gameOver: false,
-      turn: gamePlayers[0].player,
-      gamePlayers: [...gamePlayers],
+      turn: initGamePlayers[0].player,
+      gamePlayers: initGamePlayers,
       playedCardsPile: [...playedCardsPile],
       currentColor: playedCardsPile[0].charAt(1),
       currentNumber: playedCardsPile[0].charAt(0),
@@ -330,7 +331,7 @@ function GameMulti() {
             }
 
             const updatedGamePlayers = gamePlayers.map(item => {
-                if (item.player == turn) {
+                if (item.player === turn) {
                     return {...item, playerDeck: [
                       ...item.playerDeck.slice(0, removeIndex),
                       ...item.playerDeck.slice(removeIndex + 1),
@@ -519,7 +520,6 @@ function GameMulti() {
             const index = gamePlayers.findIndex(
                 (gamePlayer) => gamePlayer.player === turn
             );
-            const nextPlayer = gamePlayers[(index + 1) % gamePlayers.length].player
             const removeIndex = gamePlayers[index].playerDeck.indexOf(cardPlayed);
             if (removeIndex === -1) {
               alert("Invalid Move! -  NOT YOUR TURN");
