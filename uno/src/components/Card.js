@@ -8,7 +8,9 @@ export default function Card(props) {
     <img 
     onClick={props.myClick}
     src={props.src}
-    width='100px'
+    // className="img-fluid"
+    alt="Responsive image"
+    width='65px'
     />
   )
 }

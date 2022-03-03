@@ -2,3 +2,95 @@
   text-align: center;
 }
 
+/* Homepage */
+.Homepage {
+  background-image: url('./asset/backgrounds/Homepage.png');
+  background-size: cover;
+  margin: 0;
+  height: 100vh;
+}
+
+.homepage-menu {
+  position: relative;
+  top: 120px;
+}
+
+.homepage-menu>h1 {
+  font-size: 100px;
+}
+
+.homepage-form {
+  display: flex;
+  justify-content: center;
+  margin-top: 50px;
+}
+
+.homepage-form>h1 {
+  margin: 0 30px;
+}
+
+.homepage-join {
+  display: flex;
+  flex-direction: column;
+}
+
+.homepage-join>input {
+  font-size: 15px;
+  width: 150px;
+  line-height: 1.5em;
+}
+
+/* Game.js parent div */
+
+.Game {
+  background-size: cover;
+  margin: 0;
+  height: 100vh;
+}
+
+/* Game.js Background */
+.backgroundColorP {
+  background-image: url('./asset/backgrounds/bgP.png');
+  background-size: cover;
+
+}
+
+.backgroundColorR {
+  background-image: url('./asset/backgrounds/bgR.png');
+  background-size: cover;
+}
+
+.backgroundColorG {
+  background-image: url('./asset/backgrounds/bgG.png');
+  background-size: cover;
+}
+
+.backgroundColorB {
+  background-image: url('./asset/backgrounds/bgB.png');
+  background-size: cover;
+}
+
+.backgroundColorY {
+  background-image: url('./asset/backgrounds/bgY.png');
+  background-size: cover;
+}
+
+
+.player2Deck {
+  display: flex;
+  flex-direction: column;
+  align-items: left;
+}
+
+.player2Deck>img {
+  transition: transform 350ms;
+}
+
+.player2Deck>img:hover {
+  transform: scale(1.08);
+  opacity: 1;
+}
+
+.playerDeckText {
+  font-size: 2rem;
+}

@@ -1,27 +1,36 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import codeGen from "../utils/rgen";
+import logo from "../asset/backgrounds/UNO_logo.png";
 
 const HomePage = () => {
   const [roomCode, setRoomCode] = useState("");
 
   return (
-    <div>
-      <h1>Welcome To UNO</h1>
-      <div>
-        <input
-          type="text"
-          placeholder="Room"
-          onChange={(event) => setRoomCode(event.target.value)}
-        />
+    <div className="Homepage">
+      <div className="homepage-menu">
+        <h1>Welcome To UNO</h1>
+        <div className="homepage-form">
+          <div className="homepage-join">
+            <input
+              className="mb-3"
+              type="text"
+              placeholder="Room"
+              onChange={(event) => setRoomCode(event.target.value)}
+            />
+            <Link to={`/play?roomCode=${roomCode}`}>
+              <button className="btn btn-success btn-lg">JOIN GAME</button>
+            </Link>
+          </div>
+
+          <h1>OR</h1>
+          <div className="homepage-create">
+            <Link to={`/play?roomCode=${codeGen(5)}`}>
+              <button className="btn btn-danger btn-lg">CREATE GAME</button>
+            </Link>
+          </div>
+        </div>
       </div>
-      <Link to={`/play?roomCode=${roomCode}`}>
-        <button>START GAME</button>
-      </Link>
-      <h1>OR</h1>
-      <Link to={`/play?roomCode=${codeGen(5)}`}>
-        <button>CREATE GAME</button>
-      </Link>
     </div>
   );
 };
