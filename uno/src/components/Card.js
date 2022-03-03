@@ -5,7 +5,11 @@ import { PLAY_CARD } from "../actions/constants";
 export default function Card(props) {
   return (
     // <button onClick={() => props.onCardPlayed(props.item)}>{props.item}</button>
-    <button onClick={props.myClick}>{props.item}</button>
+    <img 
+    onClick={props.myClick}
+    src={props.src}
+    width='100px'
+    />
   )
 }
 

@@ -160,12 +160,29 @@ function GameMulti() {
 
     socket.on("roomData", ({ users }) => {
       setUsers(users);
+      //   const copyPlayers = gamePlayers;
+      //   const copiedDrawCardPile = drawCardPile;
+      //   if (gamePlayers.length < users.length) {
+
+      //       let addNum = users.length - gamePlayers.length;
+      //       for (let i = 0; i < addNum; i++) {
+      //         const playerInfo = {
+      //             player: "Player " + (gamePlayers.length + i + 1),
+      //             playerDeck: copiedDrawCardPile.slice(0, 7)
+      //         }
+      //         copyPlayers.push(playerInfo)
+      //       }
+      //   }
+      //   setGamePlayers(copyPlayers)
+      //   setDrawCardPile(copiedDrawCardPile)
     });
 
     socket.on("currentUserData", ({ name }) => {
       setCurrentUser(name);
     });
   }, []);
+
+  console.log(gamePlayers);
 
   const onCardPlayedHandler = (cardPlayed) => {
     switch (cardPlayed) {
@@ -795,10 +812,11 @@ function GameMulti() {
     }
   };
 
-  console.log(users.length)
+  console.log(users.length);
   return !roomFull ? (
     <>
-      {users.length >= 2 ? (
+      <h1>Game Code: {room}</h1>
+      {users.length >= 3 ? (
         <>
           {gameOver ? (
             <div>
@@ -817,31 +835,42 @@ function GameMulti() {
               <h1>Turn: {turn}</h1>
               <hr></hr>
               <div>
-                <h1>
-                  Current Card:{playedCardsPile[playedCardsPile.length - 1]}
-                  <br />
-                  Current Color:{currentColor}
-                </h1>
+                <div>
+                  {playedCardsPile && playedCardsPile.length > 0 && (
+                    <img
+                      // src={`images/${
+                      //   playedCardsPile[playedCardsPile.length - 1]
+                      // }.png`}
+                      src={require(`../asset/cards/${
+                        playedCardsPile[playedCardsPile.length - 1]
+                      }.png`)}
+                      width="100px"
+                    />
+                  )}
+                </div>
                 <button onClick={onCardDrawnHandler}>DRAW CARD</button>
               </div>
               <hr></hr>
               <div>
-                {
-                gamePlayers.filter(item => item.player === currentUser).map((item) => {
-                  return (
-                    <div key={uuid()}>
-                      <h3>{item.player}</h3>
-                      {item.playerDeck.map((element) => (
-                        <Card
-                          item={element}
-                          myClick={() => onCardPlayedHandler(element)}
-                          key={uuid()}
-                        />
-                      ))}
-                      <hr></hr>
-                    </div>
-                  );
-                })}
+                {gamePlayers
+                  .filter((item) => item.player === currentUser)
+                  .map((item) => {
+                    return (
+                      <div key={uuid()}>
+                        <h3>{item.player}</h3>
+                        {item.playerDeck.map((element) => (
+                          <Card
+                            item={element}
+                            // src={`images/${element}.png`}
+                            src={require(`../asset/cards/${element}.png`)}
+                            myClick={() => onCardPlayedHandler(element)}
+                            key={uuid()}
+                          />
+                        ))}
+                        <hr></hr>
+                      </div>
+                    );
+                  })}
               </div>
             </div>
           )}
