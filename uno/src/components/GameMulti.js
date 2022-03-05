@@ -29,8 +29,9 @@ function GameMulti() {
   const [gamePlayers, setGamePlayers] = useState([
     { player: "Player 1", playerDeck: [] },
     { player: "Player 2", playerDeck: [] },
-    // { player: "Player 3", playerDeck: [] },
+    { player: "Player 3", playerDeck: [] },
   ]);
+
   const [winner, setWinner] = useState("");
   const [turn, setTurn] = useState("");
   const [currentColor, setCurrentColor] = useState("");
@@ -54,7 +55,6 @@ function GameMulti() {
       transports: ["websocket"],
     };
     socket = io.connect(ENDPOINT, connectionOptions);
-    console.log(socket);
 
     socket.emit("join", { room: room }, (error) => {
       if (error) setRoomFull(true);
@@ -62,13 +62,14 @@ function GameMulti() {
 
     //cleanup on component unmount
     return function cleanup() {
-      socket.emit("disconnect");
+      socket.disconnect();
       //shut down connnection instance
       socket.off();
     };
   }, []);
 
   useEffect(() => {
+    console.log("init...")
     const shuffledCards = shuffle(CARDS);
     const initGamePlayers = gamePlayers.map((item) => {
       item.playerDeck = shuffledCards.splice(0, 7);
@@ -161,21 +162,6 @@ function GameMulti() {
 
     socket.on("roomData", ({ users }) => {
       setUsers(users);
-      //   const copyPlayers = gamePlayers;
-      //   const copiedDrawCardPile = drawCardPile;
-      //   if (gamePlayers.length < users.length) {
-
-      //       let addNum = users.length - gamePlayers.length;
-      //       for (let i = 0; i < addNum; i++) {
-      //         const playerInfo = {
-      //             player: "Player " + (gamePlayers.length + i + 1),
-      //             playerDeck: copiedDrawCardPile.slice(0, 7)
-      //         }
-      //         copyPlayers.push(playerInfo)
-      //       }
-      //   }
-      //   setGamePlayers(copyPlayers)
-      //   setDrawCardPile(copiedDrawCardPile)
     });
 
     socket.on("currentUserData", ({ name }) => {
@@ -183,7 +169,6 @@ function GameMulti() {
     });
   }, []);
 
-  console.log(gamePlayers);
 
   const onCardPlayedHandler = (cardPlayed) => {
     switch (cardPlayed) {
@@ -819,7 +804,7 @@ function GameMulti() {
       {!roomFull ? (
         <>
           <h5>Game Code: {room}</h5>
-          {users.length >= 2 ? (
+          {users.length >= 3 ? (
             <>
               {gameOver ? (
                 <div>
@@ -857,9 +842,7 @@ function GameMulti() {
                                         <Card
                                           item={element}
                                           src={require(`../asset/cards/Deck.png`)}
-                                          myClick={() =>
-                                            onCardPlayedHandler(element)
-                                          }
+                                          myClick={null}
                                           key={uuid()}
                                         />
                                       ))}
@@ -867,9 +850,7 @@ function GameMulti() {
                                   );
                                 })}
                             </div>
-                            {(turn === "Player 2" || turn === "Player 3") && (
-                              <Spinner />
-                            )}
+                            {turn === "Player 2" && <Spinner />}
                           </div>
                         </div>
                         <div className="row  mb-3">
@@ -880,7 +861,7 @@ function GameMulti() {
                             <h5>Player 3</h5>
                             <div className="mx-3">
                               {gamePlayers
-                                .filter((item) => item.player === "Player 2")
+                                .filter((item) => item.player === "Player 3")
                                 .map((item) => {
                                   return (
                                     <div className="d-flex align-items-start">
@@ -888,6 +869,70 @@ function GameMulti() {
                                         <Card
                                           item={element}
                                           src={require(`../asset/cards/Deck.png`)}
+                                          myClick={null}
+                                          key={uuid()}
+                                        />
+                                      ))}
+                                    </div>
+                                  );
+                                })}
+                            </div>
+                            {turn === "Player 3" && <Spinner />}
+                          </div>
+                        </div>
+                        <div className="row  mb-3">
+                          <div
+                            style={
+                              turn === "Player 2" || turn === "Player 3"
+                                ? { pointerEvents: "none" }
+                                : null
+                            }
+                          >
+                            <div>
+                              {playedCardsPile &&
+                                playedCardsPile.length > 0 && (
+                                  <img
+                                    src={require(`../asset/cards/${
+                                      playedCardsPile[
+                                        playedCardsPile.length - 1
+                                      ]
+                                    }.png`)}
+                                    alt=""
+                                    className="mx-3"
+                                    width="100px"
+                                  />
+                                )}
+                            </div>
+                            <button
+                              onClick={onCardDrawnHandler}
+                              className="btn btn-success btn-lg mt-3"
+                              disabled={turn !== "Player 1"}
+                            >
+                              DRAW CARD
+                            </button>
+                          </div>
+                        </div>
+                        <div className="row">
+                          <div
+                            className="d-flex align-items-start"
+                            style={
+                              turn === "Player 1"
+                                ? null
+                                : { pointerEvents: "none" }
+                            }
+                          >
+                            <h5>Player 1</h5>
+                            <div className="mx-3">
+                              {gamePlayers
+                                .filter((item) => item.player === "Player 1")
+                                .map((item) => {
+                                  return (
+                                    <div className="d-flex align-items-start">
+                                      {item.playerDeck.map((element) => (
+                                        <Card
+                                          className="zoom"
+                                          item={element}
+                                          src={require(`../asset/cards/${element}.png`)}
                                           myClick={() =>
                                             onCardPlayedHandler(element)
                                           }
@@ -898,36 +943,19 @@ function GameMulti() {
                                   );
                                 })}
                             </div>
-                            {(turn === "Player 2" || turn === "Player 3") && (
-                              <Spinner />
-                            )}
                           </div>
                         </div>
-                        <div className="row  mb-3">
-                          <div>
-                            <div>
-                              {playedCardsPile &&
-                                playedCardsPile.length > 0 && (
-                                  <img
-                                    src={require(`../asset/cards/${
-                                      playedCardsPile[
-                                        playedCardsPile.length - 1
-                                      ]
-                                    }.png`)}
-                                    className="mx-3"
-                                    width="100px"
-                                  />
-                                )}
-                            </div>
-                            <button
-                              onClick={onCardDrawnHandler}
-                              className="btn btn-success btn-lg mt-3"
-                            >
-                              DRAW CARD
-                            </button>
-                          </div>
-                        </div>
-                        <div className="row">
+
+                        <br />
+                      </>
+                    )}
+                  </div>
+
+                  {/* Player2 view */}
+                  <div className="container">
+                    {currentUser === "Player 2" && (
+                      <>
+                        <div className="row mb-3">
                           <div
                             className="d-flex align-items-start"
                             style={{ pointerEvents: "none" }}
@@ -942,6 +970,91 @@ function GameMulti() {
                                       {item.playerDeck.map((element) => (
                                         <Card
                                           item={element}
+                                          src={require(`../asset/cards/Deck.png`)}
+                                          myClick={null}
+                                          key={uuid()}
+                                        />
+                                      ))}
+                                    </div>
+                                  );
+                                })}
+                            </div>
+                            {turn === "Player 1" && <Spinner />}
+                          </div>
+                        </div>
+                        <div className="row  mb-3">
+                          <div
+                            className="d-flex align-items-start"
+                            style={{ pointerEvents: "none" }}
+                          >
+                            <h5>Player 3</h5>
+                            <div className="mx-3">
+                              {gamePlayers
+                                .filter((item) => item.player === "Player 3")
+                                .map((item) => {
+                                  return (
+                                    <div className="d-flex align-items-start">
+                                      {item.playerDeck.map((element) => (
+                                        <Card
+                                          item={element}
+                                          src={require(`../asset/cards/Deck.png`)}
+                                          myClick={null}
+                                          key={uuid()}
+                                        />
+                                      ))}
+                                    </div>
+                                  );
+                                })}
+                            </div>
+                            {turn === "Player 3" && <Spinner />}
+                          </div>
+                        </div>
+                        <div className="row  mb-3">
+                          <div>
+                            <div>
+                              {playedCardsPile &&
+                                playedCardsPile.length > 0 && (
+                                  <img
+                                    src={require(`../asset/cards/${
+                                      playedCardsPile[
+                                        playedCardsPile.length - 1
+                                      ]
+                                    }.png`)}
+                                    className="mx-3"
+                                    alt=""
+                                    width="100px"
+                                  />
+                                )}
+                            </div>
+                            <button
+                              onClick={onCardDrawnHandler}
+                              className="btn btn-success btn-lg mt-3"
+                              disabled={turn !== "Player 2"}
+                            >
+                              DRAW CARD
+                            </button>
+                          </div>
+                        </div>
+                        <div className="row">
+                          <div
+                            className="d-flex align-items-start"
+                            style={
+                              turn === "Player 2"
+                                ? null
+                                : { pointerEvents: "none" }
+                            }
+                          >
+                            <h5>Player 2</h5>
+                            <div className="mx-3">
+                              {gamePlayers
+                                .filter((item) => item.player === "Player 2")
+                                .map((item) => {
+                                  return (
+                                    <div className="d-flex align-items-start">
+                                      {item.playerDeck.map((element) => (
+                                        <Card
+                                          className="zoom"
+                                          item={element}
                                           src={require(`../asset/cards/${element}.png`)}
                                           myClick={() =>
                                             onCardPlayedHandler(element)
@@ -953,9 +1066,129 @@ function GameMulti() {
                                   );
                                 })}
                             </div>
-                            {(turn === "Player 2" || turn === "Player 3") && (
-                              <Spinner />
-                            )}
+                          </div>
+                        </div>
+
+                        <br />
+                      </>
+                    )}
+                  </div>
+
+                  {/* Player3 view */}
+                  <div className="container">
+                    {currentUser === "Player 3" && (
+                      <>
+                        <div className="row mb-3">
+                          <div
+                            className="d-flex align-items-start"
+                            style={{ pointerEvents: "none" }}
+                          >
+                            <h5>Player 1</h5>
+                            <div className="mx-3">
+                              {gamePlayers
+                                .filter((item) => item.player === "Player 1")
+                                .map((item) => {
+                                  return (
+                                    <div className="d-flex align-items-start">
+                                      {item.playerDeck.map((element) => (
+                                        <Card
+                                          item={element}
+                                          src={require(`../asset/cards/Deck.png`)}
+                                          myClick={null}
+                                          key={uuid()}
+                                        />
+                                      ))}
+                                    </div>
+                                  );
+                                })}
+                            </div>
+                            {turn === "Player 1" && <Spinner />}
+                          </div>
+                        </div>
+                        <div className="row  mb-3">
+                          <div
+                            className="d-flex align-items-start"
+                            style={{ pointerEvents: "none" }}
+                          >
+                            <h5>Player 2</h5>
+                            <div className="mx-3">
+                              {gamePlayers
+                                .filter((item) => item.player === "Player 2")
+                                .map((item) => {
+                                  return (
+                                    <div className="d-flex align-items-start">
+                                      {item.playerDeck.map((element) => (
+                                        <Card
+                                          item={element}
+                                          src={require(`../asset/cards/Deck.png`)}
+                                          myClick={null}
+                                          key={uuid()}
+                                        />
+                                      ))}
+                                    </div>
+                                  );
+                                })}
+                            </div>
+                            {turn === "Player 2" && <Spinner />}
+                          </div>
+                        </div>
+                        <div className="row  mb-3">
+                          <div>
+                            <div>
+                              {playedCardsPile &&
+                                playedCardsPile.length > 0 && (
+                                  <img
+                                    src={require(`../asset/cards/${
+                                      playedCardsPile[
+                                        playedCardsPile.length - 1
+                                      ]
+                                    }.png`)}
+                                    className="mx-3"
+                                    alt=""
+                                    width="100px"
+                                  />
+                                )}
+                            </div>
+                            <button
+                              onClick={onCardDrawnHandler}
+                              className="btn btn-success btn-lg mt-3"
+                              disabled={turn !== "Player 3"}
+                            >
+                              DRAW CARD
+                            </button>
+                          </div>
+                        </div>
+                        <div className="row">
+                          <div
+                            className="d-flex align-items-start"
+                            style={
+                              turn === "Player 3"
+                                ? null
+                                : { pointerEvents: "none" }
+                            }
+                          >
+                            <h5>Player 3</h5>
+                            <div className="mx-3">
+                              {gamePlayers
+                                .filter((item) => item.player === "Player 3")
+                                .map((item) => {
+                                  return (
+                                    <div className="d-flex align-items-start">
+                                      {item.playerDeck.map((element) => (
+                                        <Card
+                                          className="zoom"
+                                          item={element}
+                                          src={require(`../asset/cards/${element}.png`)}
+                                          myClick={() =>
+                                            onCardPlayedHandler(element)
+                                          }
+                                          key={uuid()}
+                                        />
+                                      ))}
+                                    </div>
+                                  );
+                                })}
+                            </div>
                           </div>
                         </div>
 
