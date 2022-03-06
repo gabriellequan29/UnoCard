@@ -9,7 +9,9 @@ import { UPDATE_GAME, INIT_GAME } from "../utils/constants";
 import Spinner from "./Spinner";
 
 let socket;
-const ENDPOINT = "http://localhost:5000";
+// const ENDPOINT = "http://localhost:5000";
+const ENDPOINT = "https://unocards.herokuapp.com/";
+
 
 
 function GameMulti() {
