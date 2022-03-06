@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import codeGen from "../utils/rgen";
-import logo from "../asset/backgrounds/UNO_logo.png";
+
 
 const HomePage = () => {
   const [roomCode, setRoomCode] = useState("");

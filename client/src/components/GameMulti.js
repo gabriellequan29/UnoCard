@@ -6,7 +6,7 @@ import shuffle from "../utils/shuffle";
 import uuid from "react-uuid";
 import io from "socket.io-client";
 import { UPDATE_GAME, INIT_GAME } from "../utils/constants";
-import Spinner from "../components/Spinner";
+import Spinner from "./Spinner";
 
 let socket;
 const ENDPOINT = "http://localhost:5000";
@@ -104,7 +104,7 @@ function GameMulti() {
     const playedCardsPile = shuffledCards.splice(randomCardIndex, 1);
 
     //store all remaining cards into drawCardPile
-    const drawCardPile = shuffledCards;;
+    const drawCardPile = shuffledCards;
     //set initial state
     socket.emit(INIT_GAME, {
       gameOver: false,
@@ -175,12 +175,8 @@ function GameMulti() {
     const currentPlayer = gamePlayers.filter((element) => {
       return element.player === player;
     });
-    console.log(player);
-    console.log(currentPlayer);
     if (currentPlayer[0].playerDeck.length === 2) {
-      console.log(isUnoButtonPressed);
       setUnoButtonPressed(true);
-      console.log(isUnoButtonPressed);
     }
   };
 
@@ -1082,7 +1078,7 @@ function GameMulti() {
                                   />
                                 )}
                             </div>
-                            <div>
+                            <div className="text-center">
                               <button
                                 onClick={onCardDrawnHandler}
                                 className="btn btn-success btn-lg mt-3"
@@ -1091,7 +1087,7 @@ function GameMulti() {
                                 DRAW CARD
                               </button>
                               <button
-                                className="btn btn-danger btn-lg mx-3"
+                                className="btn btn-danger btn-lg mx-3 mt-3"
                                 onClick={() => onUnoClickedHandler("Player 1")}
                               >
                                 UNO
@@ -1219,7 +1215,7 @@ function GameMulti() {
                                   />
                                 )}
                             </div>
-                            <div>
+                            <div className="text-center">
                               <button
                                 onClick={onCardDrawnHandler}
                                 className="btn btn-success btn-lg mt-3"
@@ -1228,7 +1224,7 @@ function GameMulti() {
                                 DRAW CARD
                               </button>
                               <button
-                                className="btn btn-danger btn-lg mx-3"
+                                className="btn btn-danger btn-lg mx-3 mt-3"
                                 onClick={() => onUnoClickedHandler("Player 2")}
                               >
                                 UNO
@@ -1356,7 +1352,7 @@ function GameMulti() {
                                   />
                                 )}
                             </div>
-                            <div>
+                            <div className="text-center"> 
                               <button
                                 onClick={onCardDrawnHandler}
                                 className="btn btn-success btn-lg mt-3"
@@ -1365,7 +1361,7 @@ function GameMulti() {
                                 DRAW CARD
                               </button>
                               <button
-                                className="btn btn-danger btn-lg mx-3"
+                                className="btn btn-danger btn-lg mx-3 mt-3"
                                 onClick={() => onUnoClickedHandler("Player 3")}
                               >
                                 UNO
