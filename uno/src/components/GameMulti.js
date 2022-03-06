@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { CARDS } from "../utils/cards";
+import  CARDS  from "../utils/cards";
 import { Link, useSearchParams } from "react-router-dom";
 import Card from "./Card";
 import shuffle from "../utils/shuffle";
@@ -10,6 +10,7 @@ import Spinner from "../components/Spinner";
 
 let socket;
 const ENDPOINT = "http://localhost:5000";
+
 
 function GameMulti() {
   const [searchParams] = useSearchParams();
@@ -38,6 +39,7 @@ function GameMulti() {
   const [currentNumber, setCurrentNumber] = useState("");
   const [playedCardsPile, setPlayedCardsPile] = useState([]);
   const [drawCardPile, setDrawCardPile] = useState([]);
+  const [isUnoButtonPressed, setUnoButtonPressed] = useState(false);
 
   const isGameOver = (arr) => {
     return arr.length === 1;
@@ -60,7 +62,7 @@ function GameMulti() {
       if (error) setRoomFull(true);
     });
 
-    //cleanup on component unmount
+    // cleanup on component unmount
     return function cleanup() {
       socket.disconnect();
       //shut down connnection instance
@@ -69,8 +71,7 @@ function GameMulti() {
   }, []);
 
   useEffect(() => {
-    console.log("init...");
-    const shuffledCards = shuffle(CARDS);
+    const shuffledCards = [...shuffle(CARDS)]
     const initGamePlayers = gamePlayers.map((item) => {
       item.playerDeck = shuffledCards.splice(0, 7);
       return item;
@@ -98,11 +99,12 @@ function GameMulti() {
         continue;
       } else break;
     }
+ 
     //extract the card from that randomCardIndex into the playedCardsPile
     const playedCardsPile = shuffledCards.splice(randomCardIndex, 1);
 
     //store all remaining cards into drawCardPile
-    const drawCardPile = shuffledCards;
+    const drawCardPile = shuffledCards;;
     //set initial state
     socket.emit(INIT_GAME, {
       gameOver: false,
@@ -169,6 +171,19 @@ function GameMulti() {
     });
   }, []);
 
+  const onUnoClickedHandler = (player) => {
+    const currentPlayer = gamePlayers.filter((element) => {
+      return element.player === player;
+    });
+    console.log(player);
+    console.log(currentPlayer);
+    if (currentPlayer[0].playerDeck.length === 2) {
+      console.log(isUnoButtonPressed);
+      setUnoButtonPressed(true);
+      console.log(isUnoButtonPressed);
+    }
+  };
+
   const onCardPlayedHandler = (cardPlayed) => {
     switch (cardPlayed) {
       case "0R":
@@ -225,19 +240,34 @@ function GameMulti() {
             break;
           }
 
+          const copiedDrawCardPileArray = [...drawCardPile];
           const updatedGamePlayers = gamePlayers.map((item) => {
             if (item.player === turn) {
-              return {
-                ...item,
-                playerDeck: [
-                  ...item.playerDeck.slice(0, removeIndex),
-                  ...item.playerDeck.slice(removeIndex + 1),
-                ],
-              };
+              if (item.playerDeck.length === 2 && !isUnoButtonPressed) {
+                alert("Oops! You forgot to press UNO");
+                const drawCard1 = copiedDrawCardPileArray.pop();
+                const drawCard2 = copiedDrawCardPileArray.pop();
+                return {
+                  ...item,
+                  playerDeck: [
+                    ...item.playerDeck.slice(0, removeIndex),
+                    ...item.playerDeck.slice(removeIndex + 1),
+                    drawCard1,
+                    drawCard2,
+                  ],
+                };
+              } else {
+                return {
+                  ...item,
+                  playerDeck: [
+                    ...item.playerDeck.slice(0, removeIndex),
+                    ...item.playerDeck.slice(removeIndex + 1),
+                  ],
+                };
+              }
             }
             return item;
           });
-          console.log(updatedGamePlayers);
           socket.emit(UPDATE_GAME, {
             gameOver: isGameOver(gamePlayers[index].playerDeck),
             winner: isWinner(
@@ -249,6 +279,7 @@ function GameMulti() {
             gamePlayers: updatedGamePlayers,
             currentColor: colorOfPlayedCard,
             currentNumber: numberOfPlayedCard,
+            drawCardPile: copiedDrawCardPileArray,
           });
         } else if (currentNumber === numberOfPlayedCard) {
           console.log("numbers matched!");
@@ -262,15 +293,31 @@ function GameMulti() {
             break;
           }
 
+          const copiedDrawCardPileArray = [...drawCardPile];
           const updatedGamePlayers = gamePlayers.map((item) => {
             if (item.player === turn) {
-              return {
-                ...item,
-                playerDeck: [
-                  ...item.playerDeck.slice(0, removeIndex),
-                  ...item.playerDeck.slice(removeIndex + 1),
-                ],
-              };
+              if (item.playerDeck.length === 2 && !isUnoButtonPressed) {
+                alert("Oops! You forgot to press UNO");
+                const drawCard1 = copiedDrawCardPileArray.pop();
+                const drawCard2 = copiedDrawCardPileArray.pop();
+                return {
+                  ...item,
+                  playerDeck: [
+                    ...item.playerDeck.slice(0, removeIndex),
+                    ...item.playerDeck.slice(removeIndex + 1),
+                    drawCard1,
+                    drawCard2,
+                  ],
+                };
+              } else {
+                return {
+                  ...item,
+                  playerDeck: [
+                    ...item.playerDeck.slice(0, removeIndex),
+                    ...item.playerDeck.slice(removeIndex + 1),
+                  ],
+                };
+              }
             }
             return item;
           });
@@ -285,6 +332,7 @@ function GameMulti() {
             gamePlayers: updatedGamePlayers,
             currentColor: colorOfPlayedCard,
             currentNumber: numberOfPlayedCard,
+            drawCardPile: copiedDrawCardPileArray,
           });
         } else {
           alert("Invalid Move! - normal card");
@@ -311,15 +359,31 @@ function GameMulti() {
             break;
           }
 
+          const copiedDrawCardPileArray = [...drawCardPile];
           const updatedGamePlayers = gamePlayers.reverse().map((item) => {
             if (item.player === turn) {
-              return {
-                ...item,
-                playerDeck: [
-                  ...item.playerDeck.slice(0, removeIndex),
-                  ...item.playerDeck.slice(removeIndex + 1),
-                ],
-              };
+              if (item.playerDeck.length === 2 && !isUnoButtonPressed) {
+                alert("Oops! You forgot to press UNO");
+                const drawCard1 = copiedDrawCardPileArray.pop();
+                const drawCard2 = copiedDrawCardPileArray.pop();
+                return {
+                  ...item,
+                  playerDeck: [
+                    ...item.playerDeck.slice(0, removeIndex),
+                    ...item.playerDeck.slice(removeIndex + 1),
+                    drawCard1,
+                    drawCard2,
+                  ],
+                };
+              } else {
+                return {
+                  ...item,
+                  playerDeck: [
+                    ...item.playerDeck.slice(0, removeIndex),
+                    ...item.playerDeck.slice(removeIndex + 1),
+                  ],
+                };
+              }
             }
             return item;
           });
@@ -339,6 +403,7 @@ function GameMulti() {
             gamePlayers: updatedGamePlayers,
             currentColor: colorOfPlayedCard,
             currentNumber: numberOfPlayedCard,
+            drawCardPile: copiedDrawCardPileArray,
           });
         } else if (currentNumber === numberOfPlayedCard) {
           console.log("numbers matched!");
@@ -351,15 +416,31 @@ function GameMulti() {
             break;
           }
 
+          const copiedDrawCardPileArray = [...drawCardPile];
           const updatedGamePlayers = gamePlayers.reverse().map((item) => {
             if (item.player === turn) {
-              return {
-                ...item,
-                playerDeck: [
-                  ...item.playerDeck.slice(0, removeIndex),
-                  ...item.playerDeck.slice(removeIndex + 1),
-                ],
-              };
+              if (item.playerDeck.length === 2 && !isUnoButtonPressed) {
+                alert("Oops! You forgot to press UNO");
+                const drawCard1 = copiedDrawCardPileArray.pop();
+                const drawCard2 = copiedDrawCardPileArray.pop();
+                return {
+                  ...item,
+                  playerDeck: [
+                    ...item.playerDeck.slice(0, removeIndex),
+                    ...item.playerDeck.slice(removeIndex + 1),
+                    drawCard1,
+                    drawCard2,
+                  ],
+                };
+              } else {
+                return {
+                  ...item,
+                  playerDeck: [
+                    ...item.playerDeck.slice(0, removeIndex),
+                    ...item.playerDeck.slice(removeIndex + 1),
+                  ],
+                };
+              }
             }
             return item;
           });
@@ -379,6 +460,7 @@ function GameMulti() {
             gamePlayers: updatedGamePlayers,
             currentColor: colorOfPlayedCard,
             currentNumber: numberOfPlayedCard,
+            drawCardPile: copiedDrawCardPileArray,
           });
         } else {
           alert("Invalid Move! - reverse card");
@@ -404,15 +486,31 @@ function GameMulti() {
             break;
           }
 
+          const copiedDrawCardPileArray = [...drawCardPile];
           const updatedGamePlayers = gamePlayers.map((item) => {
             if (item.player === turn) {
-              return {
-                ...item,
-                playerDeck: [
-                  ...item.playerDeck.slice(0, removeIndex),
-                  ...item.playerDeck.slice(removeIndex + 1),
-                ],
-              };
+              if (item.playerDeck.length === 2 && !isUnoButtonPressed) {
+                alert("Oops! You forgot to press UNO");
+                const drawCard1 = copiedDrawCardPileArray.pop();
+                const drawCard2 = copiedDrawCardPileArray.pop();
+                return {
+                  ...item,
+                  playerDeck: [
+                    ...item.playerDeck.slice(0, removeIndex),
+                    ...item.playerDeck.slice(removeIndex + 1),
+                    drawCard1,
+                    drawCard2,
+                  ],
+                };
+              } else {
+                return {
+                  ...item,
+                  playerDeck: [
+                    ...item.playerDeck.slice(0, removeIndex),
+                    ...item.playerDeck.slice(removeIndex + 1),
+                  ],
+                };
+              }
             }
             return item;
           });
@@ -427,6 +525,7 @@ function GameMulti() {
             gamePlayers: updatedGamePlayers,
             currentColor: colorOfPlayedCard,
             currentNumber: 404,
+            drawCardPile: copiedDrawCardPileArray,
           });
         } else if (currentNumber === 404) {
           console.log("Numbers matched!");
@@ -440,15 +539,31 @@ function GameMulti() {
             break;
           }
 
+          const copiedDrawCardPileArray = [...drawCardPile];
           const updatedGamePlayers = gamePlayers.map((item) => {
             if (item.player === turn) {
-              return {
-                ...item,
-                playerDeck: [
-                  ...item.playerDeck.slice(0, removeIndex),
-                  ...item.playerDeck.slice(removeIndex + 1),
-                ],
-              };
+              if (item.playerDeck.length === 2 && !isUnoButtonPressed) {
+                alert("Oops! You forgot to press UNO");
+                const drawCard1 = copiedDrawCardPileArray.pop();
+                const drawCard2 = copiedDrawCardPileArray.pop();
+                return {
+                  ...item,
+                  playerDeck: [
+                    ...item.playerDeck.slice(0, removeIndex),
+                    ...item.playerDeck.slice(removeIndex + 1),
+                    drawCard1,
+                    drawCard2,
+                  ],
+                };
+              } else {
+                return {
+                  ...item,
+                  playerDeck: [
+                    ...item.playerDeck.slice(0, removeIndex),
+                    ...item.playerDeck.slice(removeIndex + 1),
+                  ],
+                };
+              }
             }
             return item;
           });
@@ -463,6 +578,7 @@ function GameMulti() {
             gamePlayers: updatedGamePlayers,
             currentColor: colorOfPlayedCard,
             currentNumber: 404,
+            drawCardPile: copiedDrawCardPileArray,
           });
         } else {
           alert("Invalid Move! -- skip card");
@@ -498,13 +614,28 @@ function GameMulti() {
 
           const updatedGamePlayers = gamePlayers.map((item) => {
             if (item.player === turn) {
-              return {
-                ...item,
-                playerDeck: [
-                  ...item.playerDeck.slice(0, removeIndex),
-                  ...item.playerDeck.slice(removeIndex + 1),
-                ],
-              };
+              if (item.playerDeck.length === 2 && !isUnoButtonPressed) {
+                alert("Oops! You forgot to press UNO");
+                const drawCard3 = copiedDrawCardPileArray.pop();
+                const drawCard4 = copiedDrawCardPileArray.pop();
+                return {
+                  ...item,
+                  playerDeck: [
+                    ...item.playerDeck.slice(0, removeIndex),
+                    ...item.playerDeck.slice(removeIndex + 1),
+                    drawCard3,
+                    drawCard4,
+                  ],
+                };
+              } else {
+                return {
+                  ...item,
+                  playerDeck: [
+                    ...item.playerDeck.slice(0, removeIndex),
+                    ...item.playerDeck.slice(removeIndex + 1),
+                  ],
+                };
+              }
             }
             if (item.player === nextPlayer) {
               return {
@@ -519,8 +650,6 @@ function GameMulti() {
             }
             return item;
           });
-
-          console.log(updatedGamePlayers);
 
           socket.emit(UPDATE_GAME, {
             gameOver: isGameOver(gamePlayers[index].playerDeck),
@@ -555,13 +684,28 @@ function GameMulti() {
 
           const updatedGamePlayers = gamePlayers.map((item) => {
             if (item.player === turn) {
-              return {
-                ...item,
-                playerDeck: [
-                  ...item.playerDeck.slice(0, removeIndex),
-                  ...item.playerDeck.slice(removeIndex + 1),
-                ],
-              };
+              if (item.playerDeck.length === 2 && !isUnoButtonPressed) {
+                alert("Oops! You forgot to press UNO");
+                const drawCard3 = copiedDrawCardPileArray.pop();
+                const drawCard4 = copiedDrawCardPileArray.pop();
+                return {
+                  ...item,
+                  playerDeck: [
+                    ...item.playerDeck.slice(0, removeIndex),
+                    ...item.playerDeck.slice(removeIndex + 1),
+                    drawCard3,
+                    drawCard4,
+                  ],
+                };
+              } else {
+                return {
+                  ...item,
+                  playerDeck: [
+                    ...item.playerDeck.slice(0, removeIndex),
+                    ...item.playerDeck.slice(removeIndex + 1),
+                  ],
+                };
+              }
             }
             if (item.player === nextPlayer) {
               return {
@@ -576,8 +720,6 @@ function GameMulti() {
             }
             return item;
           });
-
-          console.log(updatedGamePlayers);
 
           socket.emit(UPDATE_GAME, {
             gameOver: isGameOver(gamePlayers[index].playerDeck),
@@ -619,19 +761,36 @@ function GameMulti() {
           alert("Invalid Move! -  NOT YOUR TURN");
           break;
         }
+
+        const copiedDrawCardPileArray = [...drawCardPile];
         const updatedGamePlayers = gamePlayers.map((item) => {
           if (item.player === turn) {
-            return {
-              ...item,
-              playerDeck: [
-                ...item.playerDeck.slice(0, removeIndex),
-                ...item.playerDeck.slice(removeIndex + 1),
-              ],
-            };
+            if (item.playerDeck.length === 2 && !isUnoButtonPressed) {
+              alert("Oops! You forgot to press UNO");
+              const drawCard1 = copiedDrawCardPileArray.pop();
+              const drawCard2 = copiedDrawCardPileArray.pop();
+              return {
+                ...item,
+                playerDeck: [
+                  ...item.playerDeck.slice(0, removeIndex),
+                  ...item.playerDeck.slice(removeIndex + 1),
+                  drawCard1,
+                  drawCard2,
+                ],
+              };
+            } else {
+              return {
+                ...item,
+                playerDeck: [
+                  ...item.playerDeck.slice(0, removeIndex),
+                  ...item.playerDeck.slice(removeIndex + 1),
+                ],
+              };
+            }
           }
           return item;
         });
-        console.log(updatedGamePlayers);
+
         socket.emit(UPDATE_GAME, {
           gameOver: isGameOver(gamePlayers[index].playerDeck),
           winner: isWinner(
@@ -643,6 +802,7 @@ function GameMulti() {
           gamePlayers: updatedGamePlayers,
           currentColor: newColor,
           currentNumber: 300,
+          drawCardPile: copiedDrawCardPileArray,
         });
         break;
       }
@@ -677,13 +837,28 @@ function GameMulti() {
 
         const updatedGamePlayers = gamePlayers.map((item) => {
           if (item.player === turn) {
-            return {
-              ...item,
-              playerDeck: [
-                ...item.playerDeck.slice(0, removeIndex),
-                ...item.playerDeck.slice(removeIndex + 1),
-              ],
-            };
+            if (item.playerDeck.length === 2 && !isUnoButtonPressed) {
+              alert("Oops! You forgot to press UNO");
+              const drawCard5 = copiedDrawCardPileArray.pop();
+              const drawCard6 = copiedDrawCardPileArray.pop();
+              return {
+                ...item,
+                playerDeck: [
+                  ...item.playerDeck.slice(0, removeIndex),
+                  ...item.playerDeck.slice(removeIndex + 1),
+                  drawCard5,
+                  drawCard6,
+                ],
+              };
+            } else {
+              return {
+                ...item,
+                playerDeck: [
+                  ...item.playerDeck.slice(0, removeIndex),
+                  ...item.playerDeck.slice(removeIndex + 1),
+                ],
+              };
+            }
           }
           if (item.player === nextPlayer) {
             return {
@@ -797,14 +972,17 @@ function GameMulti() {
     }
   };
 
-  console.log(users.length);
   return (
     <div className={`Game backgroundColorP backgroundColor${currentColor}`}>
       {!roomFull ? (
         <>
           <h5>Game Code: {room}</h5>
-          {users.length < 3 && currentUser === 'Player 2' && <h1 className='topInfoText'>Other Player has left the game.</h1> }
-          {users.length < 3 && currentUser === 'Player 3' && <h1 className='topInfoText'>Other Player has left the game.</h1> }
+          {users.length < 3 && currentUser === "Player 2" && (
+            <h1 className="topInfoText">Other Player has left the game.</h1>
+          )}
+          {users.length < 3 && currentUser === "Player 3" && (
+            <h1 className="topInfoText">Other Player has left the game.</h1>
+          )}
           {users.length >= 3 ? (
             <>
               {gameOver ? (
@@ -904,13 +1082,21 @@ function GameMulti() {
                                   />
                                 )}
                             </div>
-                            <button
-                              onClick={onCardDrawnHandler}
-                              className="btn btn-success btn-lg mt-3"
-                              disabled={turn !== "Player 1"}
-                            >
-                              DRAW CARD
-                            </button>
+                            <div>
+                              <button
+                                onClick={onCardDrawnHandler}
+                                className="btn btn-success btn-lg mt-3"
+                                disabled={turn !== "Player 1"}
+                              >
+                                DRAW CARD
+                              </button>
+                              <button
+                                className="btn btn-danger btn-lg mx-3"
+                                onClick={() => onUnoClickedHandler("Player 1")}
+                              >
+                                UNO
+                              </button>
+                            </div>
                           </div>
                         </div>
                         <div className="row">
@@ -1011,7 +1197,13 @@ function GameMulti() {
                           </div>
                         </div>
                         <div className="row  mb-3">
-                          <div>
+                          <div
+                            style={
+                              turn === "Player 1" || turn === "Player 3"
+                                ? { pointerEvents: "none" }
+                                : null
+                            }
+                          >
                             <div>
                               {playedCardsPile &&
                                 playedCardsPile.length > 0 && (
@@ -1027,13 +1219,21 @@ function GameMulti() {
                                   />
                                 )}
                             </div>
-                            <button
-                              onClick={onCardDrawnHandler}
-                              className="btn btn-success btn-lg mt-3"
-                              disabled={turn !== "Player 2"}
-                            >
-                              DRAW CARD
-                            </button>
+                            <div>
+                              <button
+                                onClick={onCardDrawnHandler}
+                                className="btn btn-success btn-lg mt-3"
+                                disabled={turn !== "Player 2"}
+                              >
+                                DRAW CARD
+                              </button>
+                              <button
+                                className="btn btn-danger btn-lg mx-3"
+                                onClick={() => onUnoClickedHandler("Player 2")}
+                              >
+                                UNO
+                              </button>
+                            </div>
                           </div>
                         </div>
                         <div className="row">
@@ -1134,7 +1334,13 @@ function GameMulti() {
                           </div>
                         </div>
                         <div className="row  mb-3">
-                          <div>
+                          <div
+                            style={
+                              turn === "Player 1" || turn === "Player 2"
+                                ? { pointerEvents: "none" }
+                                : null
+                            }
+                          >
                             <div>
                               {playedCardsPile &&
                                 playedCardsPile.length > 0 && (
@@ -1150,13 +1356,21 @@ function GameMulti() {
                                   />
                                 )}
                             </div>
-                            <button
-                              onClick={onCardDrawnHandler}
-                              className="btn btn-success btn-lg mt-3"
-                              disabled={turn !== "Player 3"}
-                            >
-                              DRAW CARD
-                            </button>
+                            <div>
+                              <button
+                                onClick={onCardDrawnHandler}
+                                className="btn btn-success btn-lg mt-3"
+                                disabled={turn !== "Player 3"}
+                              >
+                                DRAW CARD
+                              </button>
+                              <button
+                                className="btn btn-danger btn-lg mx-3"
+                                onClick={() => onUnoClickedHandler("Player 3")}
+                              >
+                                UNO
+                              </button>
+                            </div>
                           </div>
                         </div>
                         <div className="row">
