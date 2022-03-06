@@ -2,7 +2,7 @@ const users = []
 
 const addUser = ({id, name, room}) => {
    const numberOfUsersInRoom = users.filter(user => user.room === room).length
-   if(numberOfUsersInRoom === 4)
+   if(numberOfUsersInRoom === 3)
    return { error: 'Room full' }
 
    const newUser = { id, name, room }
