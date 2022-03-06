@@ -12,6 +12,12 @@ const io = socketio(server)
 
 app.use(cors())
 
+app.use(express.static(path.join(__dirname, "/client/build")));
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '/client/build', 'index.html'));
+});
+
 const players = ['Player 1', 'Player 2', 'Player 3']
 
 io.on('connection', socket => {
