@@ -10,7 +10,8 @@ export default function Card(props) {
     src={props.src}
     // className="img-fluid"
     alt="Responsive image"
-    width='65px'
+    width='75px'
+    className='mx-1'
     />
   )
 }

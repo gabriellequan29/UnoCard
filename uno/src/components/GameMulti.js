@@ -69,7 +69,7 @@ function GameMulti() {
   }, []);
 
   useEffect(() => {
-    console.log("init...")
+    console.log("init...");
     const shuffledCards = shuffle(CARDS);
     const initGamePlayers = gamePlayers.map((item) => {
       item.playerDeck = shuffledCards.splice(0, 7);
@@ -168,7 +168,6 @@ function GameMulti() {
       setCurrentUser(name);
     });
   }, []);
-
 
   const onCardPlayedHandler = (cardPlayed) => {
     switch (cardPlayed) {
@@ -804,6 +803,8 @@ function GameMulti() {
       {!roomFull ? (
         <>
           <h5>Game Code: {room}</h5>
+          {users.length < 3 && currentUser === 'Player 2' && <h1 className='topInfoText'>Other Player has left the game.</h1> }
+          {users.length < 3 && currentUser === 'Player 3' && <h1 className='topInfoText'>Other Player has left the game.</h1> }
           {users.length >= 3 ? (
             <>
               {gameOver ? (
@@ -880,7 +881,7 @@ function GameMulti() {
                             {turn === "Player 3" && <Spinner />}
                           </div>
                         </div>
-                        <div className="row  mb-3">
+                        <div className="row my-3">
                           <div
                             style={
                               turn === "Player 2" || turn === "Player 3"
@@ -1206,6 +1207,11 @@ function GameMulti() {
       ) : (
         <h1>Room full</h1>
       )}
+
+      <br />
+      <Link to="/">
+        <button className="btn btn-danger btn-lg">QUIT</button>
+      </Link>
     </div>
   );
 }
