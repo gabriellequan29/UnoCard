@@ -32,7 +32,7 @@ cd client
 npm install
 npm start
 ```
-### Thanks to
+## Thanks to
 1. https://github.com/mizanxali/uno-online (Mizan Ali, thanks for sharing the code)
 2. https://alexder.itch.io/uno-card-game-asset-pack (Alex Der, thanks for card assets)
 
